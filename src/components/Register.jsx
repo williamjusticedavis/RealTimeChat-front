@@ -14,14 +14,14 @@ function Register() {
     e.preventDefault();
     try {
       // Register the user
-      await axios.post("http://localhost:3000/auth/register", {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/register`, {
         email,
         password,
         username,
       });
 
       // Immediately log in after successful registration
-      const loginResponse = await axios.post("http://localhost:3000/auth/login", {
+      const loginResponse = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/login`, {
         email,
         password,
       });

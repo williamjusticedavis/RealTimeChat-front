@@ -13,7 +13,7 @@ function Chat() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/auth/users");
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/auth/users`);
         setUsers(response.data);
       } catch (error) {
         console.error("Failed to fetch users", error);
@@ -27,7 +27,7 @@ function Chat() {
     setSelectedUser(user);
     try {
       const response = await axios.get(
-        `http://localhost:3000/chat/messages/${userId}/${user._id}`
+        `${import.meta.env.VITE_BACKEND_URL}/chat/messages/${userId}/${user._id}`
       );
       setMessages(response.data);
     } catch (error) {
@@ -44,7 +44,7 @@ function Chat() {
       };
   
       try {
-        const response = await axios.post("http://localhost:3000/chat/send", newMessage);
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/send`, newMessage);
         setMessages((prevMessages) => [...prevMessages, response.data]);
         setInput("");
       } catch (error) {
