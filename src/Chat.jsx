@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import axios from "axios";
 
-// Connect to Socket.IO server
 const socket = io(import.meta.env.VITE_BACKEND_URL);
 
 function Chat() {
@@ -11,6 +10,7 @@ function Chat() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -26,12 +26,9 @@ function Chat() {
 
     fetchUsers();
 
-    // Join the user's unique room for real-time updates
     socket.emit("joinRoom", userId);
 
-    // Listen for incoming messages
     socket.on("newMessage", (message) => {
-      // Only add the message if it's from the selected user or sent by the current user
       if (
         (message.sender === selectedUser?._id && message.receiver === userId) ||
         (message.sender === userId && message.receiver === selectedUser?._id)
@@ -58,19 +55,23 @@ function Chat() {
   };
 
   const sendMessage = async () => {
-    if (input.trim() && selectedUser) {
+    if (input.trim() && selectedUser && !loading) {
       const newMessage = {
         senderId: userId,
         receiverId: selectedUser._id,
         content: input,
       };
-      
+
+      setLoading(true);
+
       try {
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/send`, newMessage);
         setMessages((prevMessages) => [...prevMessages, response.data]);
         setInput("");
       } catch (error) {
         console.error("Failed to send message", error);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -159,10 +160,11 @@ function Chat() {
               onChange={(e) => setInput(e.target.value)}
             />
             <button
-              className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className={`ml-2 px-4 py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
               onClick={sendMessage}
+              disabled={loading}
             >
-              Send
+              {loading ? "Sending..." : "Send"}
             </button>
           </div>
         )}
