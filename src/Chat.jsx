@@ -31,7 +31,11 @@ function Chat() {
 
     // Listen for incoming messages
     socket.on("newMessage", (message) => {
-      if (message.sender === selectedUser?._id || message.receiver === userId) {
+      // Only add the message if it's from the selected user or sent by the current user
+      if (
+        (message.sender === selectedUser?._id && message.receiver === userId) ||
+        (message.sender === userId && message.receiver === selectedUser?._id)
+      ) {
         setMessages((prevMessages) => [...prevMessages, message]);
       }
     });
@@ -60,7 +64,7 @@ function Chat() {
         receiverId: selectedUser._id,
         content: input,
       };
-  
+      
       try {
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/send`, newMessage);
         setMessages((prevMessages) => [...prevMessages, response.data]);
