@@ -14,8 +14,8 @@ function Chat() {
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
-  // Reference to track messages in the process of being sent
-  const pendingMessages = useRef(new Set());
+  // Ref to track message IDs that have already been added to avoid duplicates
+  const messageIds = useRef(new Set());
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -31,12 +31,15 @@ function Chat() {
 
     socket.emit("joinRoom", userId);
 
+    // Listen for incoming messages
     socket.on("newMessage", (message) => {
       if (
         (message.sender === selectedUser?._id && message.receiver === userId) ||
         (message.sender === userId && message.receiver === selectedUser?._id)
       ) {
-        if (!pendingMessages.current.has(message._id)) {
+        // Add the message only if it hasn't been added before
+        if (!messageIds.current.has(message._id)) {
+          messageIds.current.add(message._id); // Mark this message ID as added
           setMessages((prevMessages) => [...prevMessages, message]);
         }
       }
@@ -54,7 +57,9 @@ function Chat() {
         `${import.meta.env.VITE_BACKEND_URL}/chat/messages/${userId}/${user._id}`
       );
       setMessages(response.data);
-      pendingMessages.current.clear(); // Clear any pending messages when switching users
+      // Clear the message IDs when switching chats
+      messageIds.current.clear();
+      response.data.forEach((msg) => messageIds.current.add(msg._id));
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
@@ -73,8 +78,8 @@ function Chat() {
       try {
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/send`, newMessage);
         
-        // Add the message ID to the pendingMessages set
-        pendingMessages.current.add(response.data._id);
+        // Add the message ID to the messageIds set to track it
+        messageIds.current.add(response.data._id);
 
         setMessages((prevMessages) => [...prevMessages, response.data]);
         setInput("");
