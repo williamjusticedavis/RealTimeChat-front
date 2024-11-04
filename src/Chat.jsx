@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import axios from "axios";
+
+// Connect to Socket.IO server
+const socket = io(import.meta.env.VITE_BACKEND_URL);
 
 function Chat() {
   const [users, setUsers] = useState([]);
@@ -21,7 +25,21 @@ function Chat() {
     };
 
     fetchUsers();
-  }, []);
+
+    // Join the user's unique room for real-time updates
+    socket.emit("joinRoom", userId);
+
+    // Listen for incoming messages
+    socket.on("newMessage", (message) => {
+      if (message.sender === selectedUser?._id || message.receiver === userId) {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      }
+    });
+
+    return () => {
+      socket.off("newMessage");
+    };
+  }, [userId, selectedUser]);
 
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
