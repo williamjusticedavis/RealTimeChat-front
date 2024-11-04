@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import axios from "axios";
@@ -13,6 +13,9 @@ function Chat() {
   const [loading, setLoading] = useState(false);
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
+
+  // Reference to track messages in the process of being sent
+  const pendingMessages = useRef(new Set());
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -33,7 +36,9 @@ function Chat() {
         (message.sender === selectedUser?._id && message.receiver === userId) ||
         (message.sender === userId && message.receiver === selectedUser?._id)
       ) {
-        setMessages((prevMessages) => [...prevMessages, message]);
+        if (!pendingMessages.current.has(message._id)) {
+          setMessages((prevMessages) => [...prevMessages, message]);
+        }
       }
     });
 
@@ -49,6 +54,7 @@ function Chat() {
         `${import.meta.env.VITE_BACKEND_URL}/chat/messages/${userId}/${user._id}`
       );
       setMessages(response.data);
+      pendingMessages.current.clear(); // Clear any pending messages when switching users
     } catch (error) {
       console.error("Failed to fetch messages", error);
     }
@@ -66,6 +72,10 @@ function Chat() {
 
       try {
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/send`, newMessage);
+        
+        // Add the message ID to the pendingMessages set
+        pendingMessages.current.add(response.data._id);
+
         setMessages((prevMessages) => [...prevMessages, response.data]);
         setInput("");
       } catch (error) {
