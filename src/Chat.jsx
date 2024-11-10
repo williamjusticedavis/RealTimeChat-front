@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
+import socket from "../socket"; // Import the single socket instance
 import axios from "axios";
-
-const socket = io(import.meta.env.VITE_BACKEND_URL);
 
 function Chat() {
   const [users, setUsers] = useState([]);
@@ -14,7 +12,6 @@ function Chat() {
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
-  // Ref to track message IDs that have already been added to avoid duplicates
   const messageIds = useRef(new Set());
 
   useEffect(() => {
@@ -29,24 +26,25 @@ function Chat() {
 
     fetchUsers();
 
+    // Join room for the logged-in user
     socket.emit("joinRoom", userId);
 
     // Listen for incoming messages
     socket.on("newMessage", (message) => {
-      // Avoid duplication by checking if message is self-sent and is already in the messageIds
       if (!messageIds.current.has(message._id)) {
         if (
           (message.sender === selectedUser?._id && message.receiver === userId) ||
           (message.sender === userId && message.receiver === selectedUser?._id) ||
           (message.sender === userId && message.receiver === userId)
         ) {
-          messageIds.current.add(message._id); // Track this message ID to prevent duplicates
+          messageIds.current.add(message._id);
           setMessages((prevMessages) => [...prevMessages, message]);
         }
       }
     });
 
     return () => {
+      // Clean up the listener on component unmount
       socket.off("newMessage");
     };
   }, [userId, selectedUser]);
@@ -58,7 +56,6 @@ function Chat() {
         `${import.meta.env.VITE_BACKEND_URL}/chat/messages/${userId}/${user._id}`
       );
       setMessages(response.data);
-      // Clear the message IDs when switching chats
       messageIds.current.clear();
       response.data.forEach((msg) => messageIds.current.add(msg._id));
     } catch (error) {
@@ -78,10 +75,7 @@ function Chat() {
 
       try {
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/send`, newMessage);
-        
-        // Add the message ID to the messageIds set to track it
         messageIds.current.add(response.data._id);
-
         setMessages((prevMessages) => [...prevMessages, response.data]);
         setInput("");
       } catch (error) {
