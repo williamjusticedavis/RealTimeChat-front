@@ -33,13 +33,14 @@ function Chat() {
 
     // Listen for incoming messages
     socket.on("newMessage", (message) => {
-      if (
-        (message.sender === selectedUser?._id && message.receiver === userId) ||
-        (message.sender === userId && message.receiver === selectedUser?._id)
-      ) {
-        // Add the message only if it hasn't been added before
-        if (!messageIds.current.has(message._id)) {
-          messageIds.current.add(message._id); // Mark this message ID as added
+      // Avoid duplication by checking if message is self-sent and is already in the messageIds
+      if (!messageIds.current.has(message._id)) {
+        if (
+          (message.sender === selectedUser?._id && message.receiver === userId) ||
+          (message.sender === userId && message.receiver === selectedUser?._id) ||
+          (message.sender === userId && message.receiver === userId)
+        ) {
+          messageIds.current.add(message._id); // Track this message ID to prevent duplicates
           setMessages((prevMessages) => [...prevMessages, message]);
         }
       }
