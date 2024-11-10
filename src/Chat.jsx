@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import socket from "../socket"; // Import the single socket instance
+import socket from "../src/socket"; // Import the single socket instance
 import axios from "axios";
 
 function Chat() {
