@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import socket from "../socket"; // Import the single socket instance
+import socket from "../src/socket"; // Import the single socket instance
 import axios from "axios";
 
 function Chat() {
@@ -105,11 +105,10 @@ function Chat() {
             <li
               key={index}
               onClick={() => handleUserSelect(user)}
-              className={`p-2 cursor-pointer rounded ${
-                selectedUser && selectedUser._id === user._id
+              className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
                   ? "bg-blue-300 text-white"
                   : "bg-gray-200 hover:bg-gray-300"
-              }`}
+                }`}
             >
               {user.username}
             </li>
@@ -136,16 +135,14 @@ function Chat() {
               messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`flex mb-2 ${
-                    msg.sender === userId ? "justify-end" : "justify-start"
-                  }`}
+                  className={`flex mb-2 ${msg.sender === userId ? "justify-end" : "justify-start"
+                    }`}
                 >
                   <div
-                    className={`p-2 max-w-xs rounded-lg ${
-                      msg.sender === userId
+                    className={`p-2 max-w-xs rounded-lg ${msg.sender === userId
                         ? "bg-blue-500 text-white self-end rounded-br-none"
                         : "bg-gray-300 text-gray-800 self-start rounded-bl-none"
-                    }`}
+                      }`}
                   >
                     {msg.content}
                   </div>
@@ -168,6 +165,12 @@ function Chat() {
               className="flex-grow p-2 border rounded"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
             />
             <button
               className={`ml-2 px-4 py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
