@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import EmojiPicker from "emoji-picker-react"; // Use the correct import for emoji picker
-import socket from "./socket"; // Adjusted import for socket
+import EmojiPicker from "emoji-picker-react";
+import socket from "./socket"; 
 import axios from "axios";
 
 function Chat() {
@@ -10,7 +10,7 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPicker, setShowPicker] = useState(null); // Track which message's picker is open
+  const [showPicker, setShowPicker] = useState(null);
   const [reactions, setReactions] = useState({});
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
@@ -85,7 +85,7 @@ function Chat() {
 
   const onEmojiClick = (emojiData, messageId) => {
     setReactions((prev) => ({ ...prev, [messageId]: emojiData.emoji }));
-    setShowPicker(null); // Close picker after selecting
+    setShowPicker(null);
   };
 
   const handleLogout = () => {
@@ -93,6 +93,12 @@ function Chat() {
     localStorage.removeItem("username");
     localStorage.removeItem("userId");
     navigate("/");
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !loading) {
+      sendMessage();
+    }
   };
 
   return (
@@ -136,33 +142,33 @@ function Chat() {
           {selectedUser ? (
             messages.length > 0 ? (
               messages.map((msg, index) => (
-                <div key={index} className="relative mb-2 flex justify-start">
+                <div key={index} className={`relative mb-2 flex ${msg.sender === userId ? "justify-end" : "justify-start"}`}>
                   {/* Message Content */}
                   <div
                     className={`relative p-2 max-w-xs rounded-lg ${
                       msg.sender === userId
-                        ? "bg-blue-500 text-white self-end rounded-br-none"
-                        : "bg-gray-300 text-gray-800 self-start rounded-bl-none"
+                        ? "bg-blue-500 text-white rounded-br-none"
+                        : "bg-gray-300 text-gray-800 rounded-bl-none"
                     }`}
                   >
                     {msg.content}
 
-                    {/* Display Reaction (top-right corner within message bubble) */}
+                    {/* Display Reaction */}
                     {reactions[msg._id] && (
                       <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl">
                         {reactions[msg._id]}
                       </span>
                     )}
-                  </div>
 
-                  {/* Reaction Button (+) in bottom-right corner within message bubble */}
-                  <button
-                    className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-xl"
-                    style={{ color: '#ff6f61' }} // Color for visibility
-                    onClick={() => togglePicker(msg._id)}
-                  >
-                    +
-                  </button>
+                    {/* Reaction Button (+) */}
+                    <button
+                      className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-xl"
+                      style={{ color: '#ff6f61' }}
+                      onClick={() => togglePicker(msg._id)}
+                    >
+                      +
+                    </button>
+                  </div>
 
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
@@ -202,6 +208,7 @@ function Chat() {
               className="flex-grow p-2 border rounded"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress} // Enter key sends message
             />
             <button
               className={`ml-2 px-4 py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
