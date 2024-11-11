@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import EmojiPicker from "emoji-picker-react";
-import socket from "./socket";
+import EmojiPicker from "emoji-picker-react"; // Use the correct import for emoji picker
+import socket from "./socket"; // Adjusted import for socket
 import axios from "axios";
 
 function Chat() {
@@ -11,7 +11,7 @@ function Chat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(null); // Track which message's picker is open
-  const [reactions, setReactions] = useState({}); // Store emojis per message
+  const [reactions, setReactions] = useState({});
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -79,13 +79,6 @@ function Chat() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("userId");
-    navigate("/");
-  };
-
   const togglePicker = (messageId) => {
     setShowPicker((prev) => (prev === messageId ? null : messageId));
   };
@@ -93,6 +86,13 @@ function Chat() {
   const onEmojiClick = (emojiData, messageId) => {
     setReactions((prev) => ({ ...prev, [messageId]: emojiData.emoji }));
     setShowPicker(null); // Close picker after selecting
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    localStorage.removeItem("userId");
+    navigate("/");
   };
 
   return (
@@ -107,10 +107,11 @@ function Chat() {
             <li
               key={index}
               onClick={() => handleUserSelect(user)}
-              className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
-                ? "bg-blue-300 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-                }`}
+              className={`p-2 cursor-pointer rounded ${
+                selectedUser && selectedUser._id === user._id
+                  ? "bg-blue-300 text-white"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
             >
               {user.username}
             </li>
@@ -138,35 +139,43 @@ function Chat() {
                 <div key={index} className="relative mb-2 flex justify-start">
                   {/* Message Content */}
                   <div
-                    className={`relative p-2 max-w-xs rounded-lg ${msg.sender === userId
+                    className={`relative p-2 max-w-xs rounded-lg ${
+                      msg.sender === userId
                         ? "bg-blue-500 text-white self-end rounded-br-none"
                         : "bg-gray-300 text-gray-800 self-start rounded-bl-none"
-                      }`}
+                    }`}
                   >
                     {msg.content}
 
                     {/* Display Reaction (top-right corner within message bubble) */}
                     {reactions[msg._id] && (
-                      <span className="absolute top-0 right-0 text-xl">
+                      <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl">
                         {reactions[msg._id]}
                       </span>
                     )}
-
-                    {/* Reaction Button (+) in bottom-right corner within message bubble */}
-                    <button
-                      className="absolute bottom-0 right-0 text-gray-500 hover:text-gray-700 text-xl"
-                      onClick={() => togglePicker(msg._id)}
-                    >
-                      +
-                    </button>
                   </div>
+
+                  {/* Reaction Button (+) in bottom-right corner within message bubble */}
+                  <button
+                    className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-xl"
+                    style={{ color: '#ff6f61' }} // Color for visibility
+                    onClick={() => togglePicker(msg._id)}
+                  >
+                    +
+                  </button>
 
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
-                    <div className="absolute bottom-8 right-0 z-10">
-                      <div className="bg-white border rounded shadow-md p-1">
-                        <button onClick={() => setShowPicker(null)}>React</button>
-                      </div>
+                    <div
+                      className={`absolute z-10 ${index > messages.length / 2 ? 'bottom-full' : 'top-full'} right-0`}
+                      style={{
+                        transform: 'translateY(10px)',
+                        backgroundColor: 'white',
+                        boxShadow: '0px 4px 8px rgba(0,0,0,0.2)',
+                        padding: '0.5rem',
+                        borderRadius: '8px',
+                      }}
+                    >
                       <EmojiPicker
                         onEmojiClick={(emojiData) => onEmojiClick(emojiData, msg._id)}
                         disableAutoFocus
@@ -183,7 +192,6 @@ function Chat() {
             <p className="text-gray-500 text-center mt-8">Select a user to start chatting</p>
           )}
         </div>
-
 
         {/* Message Input */}
         {selectedUser && (
