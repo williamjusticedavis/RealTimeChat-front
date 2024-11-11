@@ -108,8 +108,8 @@ function Chat() {
               key={index}
               onClick={() => handleUserSelect(user)}
               className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
-                  ? "bg-blue-300 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
+                ? "bg-blue-300 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
                 }`}
             >
               {user.username}
@@ -135,28 +135,31 @@ function Chat() {
           {selectedUser ? (
             messages.length > 0 ? (
               messages.map((msg, index) => (
-                <div key={index} className="relative flex mb-2 justify-start">
+                <div key={index} className="relative mb-2 flex justify-start">
                   {/* Message Content */}
                   <div
-                    className={`p-2 max-w-xs rounded-lg ${msg.sender === userId
+                    className={`relative p-2 max-w-xs rounded-lg ${msg.sender === userId
                         ? "bg-blue-500 text-white self-end rounded-br-none"
                         : "bg-gray-300 text-gray-800 self-start rounded-bl-none"
                       }`}
                   >
                     {msg.content}
-                    {/* Display Reaction */}
-                    {reactions[msg._id] && (
-                      <span className="absolute top-0 right-0 text-xl">{reactions[msg._id]}</span>
-                    )}
-                  </div>
 
-                  {/* Reaction Button */}
-                  <button
-                    className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-xl"
-                    onClick={() => togglePicker(msg._id)}
-                  >
-                    +
-                  </button>
+                    {/* Display Reaction (top-right corner within message bubble) */}
+                    {reactions[msg._id] && (
+                      <span className="absolute top-0 right-0 text-xl">
+                        {reactions[msg._id]}
+                      </span>
+                    )}
+
+                    {/* Reaction Button (+) in bottom-right corner within message bubble */}
+                    <button
+                      className="absolute bottom-0 right-0 text-gray-500 hover:text-gray-700 text-xl"
+                      onClick={() => togglePicker(msg._id)}
+                    >
+                      +
+                    </button>
+                  </div>
 
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
@@ -180,6 +183,7 @@ function Chat() {
             <p className="text-gray-500 text-center mt-8">Select a user to start chatting</p>
           )}
         </div>
+
 
         {/* Message Input */}
         {selectedUser && (
