@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import socket from "../src/socket"; // Import the single socket instance
+import { Picker } from "emoji-picker-react"; // Import Emoji Picker
+import socket from "../socket";
 import axios from "axios";
 
 function Chat() {
@@ -9,6 +10,8 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(null); // Track which message's picker is open
+  const [reactions, setReactions] = useState({}); // Store emojis per message
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -25,26 +28,16 @@ function Chat() {
     };
 
     fetchUsers();
-
-    // Join room for the logged-in user
     socket.emit("joinRoom", userId);
 
-    // Listen for incoming messages
     socket.on("newMessage", (message) => {
       if (!messageIds.current.has(message._id)) {
-        if (
-          (message.sender === selectedUser?._id && message.receiver === userId) ||
-          (message.sender === userId && message.receiver === selectedUser?._id) ||
-          (message.sender === userId && message.receiver === userId)
-        ) {
-          messageIds.current.add(message._id);
-          setMessages((prevMessages) => [...prevMessages, message]);
-        }
+        messageIds.current.add(message._id);
+        setMessages((prevMessages) => [...prevMessages, message]);
       }
     });
 
     return () => {
-      // Clean up the listener on component unmount
       socket.off("newMessage");
     };
   }, [userId, selectedUser]);
@@ -93,6 +86,15 @@ function Chat() {
     navigate("/");
   };
 
+  const togglePicker = (messageId) => {
+    setShowPicker((prev) => (prev === messageId ? null : messageId));
+  };
+
+  const onEmojiClick = (emojiData, messageId) => {
+    setReactions((prev) => ({ ...prev, [messageId]: emojiData.emoji }));
+    setShowPicker(null); // Close picker after selecting
+  };
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -105,10 +107,11 @@ function Chat() {
             <li
               key={index}
               onClick={() => handleUserSelect(user)}
-              className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
+              className={`p-2 cursor-pointer rounded ${
+                selectedUser && selectedUser._id === user._id
                   ? "bg-blue-300 text-white"
                   : "bg-gray-200 hover:bg-gray-300"
-                }`}
+              }`}
             >
               {user.username}
             </li>
@@ -133,19 +136,43 @@ function Chat() {
           {selectedUser ? (
             messages.length > 0 ? (
               messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex mb-2 ${msg.sender === userId ? "justify-end" : "justify-start"
-                    }`}
-                >
+                <div key={index} className="relative flex mb-2 justify-start">
+                  {/* Message Content */}
                   <div
-                    className={`p-2 max-w-xs rounded-lg ${msg.sender === userId
+                    className={`p-2 max-w-xs rounded-lg ${
+                      msg.sender === userId
                         ? "bg-blue-500 text-white self-end rounded-br-none"
                         : "bg-gray-300 text-gray-800 self-start rounded-bl-none"
-                      }`}
+                    }`}
                   >
                     {msg.content}
+                    {/* Display Reaction */}
+                    {reactions[msg._id] && (
+                      <span className="absolute top-0 right-0 text-xl">{reactions[msg._id]}</span>
+                    )}
                   </div>
+
+                  {/* Reaction Button */}
+                  <button
+                    className="absolute bottom-0 right-0 text-gray-500 hover:text-gray-700"
+                    onClick={() => togglePicker(msg._id)}
+                  >
+                    +
+                  </button>
+
+                  {/* Reaction Picker */}
+                  {showPicker === msg._id && (
+                    <div className="absolute bottom-6 right-0 z-10">
+                      <div className="bg-white border rounded shadow-md p-1">
+                        <button onClick={() => setShowPicker(null)}>React</button>
+                      </div>
+                      <Picker
+                        onEmojiClick={(emojiData) => onEmojiClick(emojiData, msg._id)}
+                        disableAutoFocus
+                        native
+                      />
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -165,12 +192,6 @@ function Chat() {
               className="flex-grow p-2 border rounded"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
             />
             <button
               className={`ml-2 px-4 py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
