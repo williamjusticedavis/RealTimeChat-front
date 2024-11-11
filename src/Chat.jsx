@@ -107,11 +107,10 @@ function Chat() {
             <li
               key={index}
               onClick={() => handleUserSelect(user)}
-              className={`p-2 cursor-pointer rounded ${
-                selectedUser && selectedUser._id === user._id
+              className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
                   ? "bg-blue-300 text-white"
                   : "bg-gray-200 hover:bg-gray-300"
-              }`}
+                }`}
             >
               {user.username}
             </li>
@@ -139,11 +138,10 @@ function Chat() {
                 <div key={index} className="relative flex mb-2 justify-start">
                   {/* Message Content */}
                   <div
-                    className={`p-2 max-w-xs rounded-lg ${
-                      msg.sender === userId
+                    className={`p-2 max-w-xs rounded-lg ${msg.sender === userId
                         ? "bg-blue-500 text-white self-end rounded-br-none"
                         : "bg-gray-300 text-gray-800 self-start rounded-bl-none"
-                    }`}
+                      }`}
                   >
                     {msg.content}
                     {/* Display Reaction */}
@@ -154,7 +152,7 @@ function Chat() {
 
                   {/* Reaction Button */}
                   <button
-                    className="absolute bottom-0 right-0 text-gray-500 hover:text-gray-700"
+                    className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-xl"
                     onClick={() => togglePicker(msg._id)}
                   >
                     +
@@ -162,7 +160,7 @@ function Chat() {
 
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
-                    <div className="absolute bottom-6 right-0 z-10">
+                    <div className="absolute bottom-8 right-0 z-10">
                       <div className="bg-white border rounded shadow-md p-1">
                         <button onClick={() => setShowPicker(null)}>React</button>
                       </div>
