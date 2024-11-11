@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Picker } from "emoji-picker-react"; // Import Emoji Picker
-import socket from "../src/socket";
+import EmojiPicker from "emoji-picker-react";
+import socket from "./socket";
 import axios from "axios";
 
 function Chat() {
@@ -166,7 +166,7 @@ function Chat() {
                       <div className="bg-white border rounded shadow-md p-1">
                         <button onClick={() => setShowPicker(null)}>React</button>
                       </div>
-                      <Picker
+                      <EmojiPicker
                         onEmojiClick={(emojiData) => onEmojiClick(emojiData, msg._id)}
                         disableAutoFocus
                         native
