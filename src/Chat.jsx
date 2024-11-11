@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
-import socket from "./socket"; 
+import socket from "./socket";
 import axios from "axios";
 
 function Chat() {
@@ -156,7 +156,7 @@ function Chat() {
           {selectedUser ? (
             messages.length > 0 ? (
               messages.map((msg, index) => (
-                <div key={index} className={`relative mb-8 flex ${msg.sender === userId ? "justify-end" : "justify-start"}`}>
+                <div key={index} className={`relative mb-4 flex ${msg.sender === userId ? "justify-end" : "justify-start"}`}>
                   {/* Message Content */}
                   <div
                     className={`relative p-2 max-w-xs rounded-lg ${
@@ -166,6 +166,17 @@ function Chat() {
                     }`}
                   >
                     {msg.content}
+                    
+                    {/* Reaction Button (+) at the end of the message */}
+                    <button
+                      className="text-gray-500 hover:text-gray-700 ml-1 text-sm"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Stop event from triggering outside click
+                        togglePicker(msg._id);
+                      }}
+                    >
+                      +
+                    </button>
 
                     {/* Display Reaction */}
                     {reactions[msg._id] && (
@@ -173,15 +184,6 @@ function Chat() {
                         {reactions[msg._id]}
                       </span>
                     )}
-
-                    {/* Reaction Button (+) */}
-                    <button
-                      className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-lg"
-                      style={{ color: '#ff6f61' }}
-                      onClick={() => togglePicker(msg._id)}
-                    >
-                      +
-                    </button>
                   </div>
 
                   {/* Reaction Picker */}
@@ -189,7 +191,7 @@ function Chat() {
                     <div
                       className={`emoji-picker-container absolute z-10 ${
                         index > messages.length / 2 ? 'bottom-full' : 'top-full'
-                      } right-0`}
+                      }`}
                       style={{
                         transform: 'translateY(10px)',
                         backgroundColor: 'white',
