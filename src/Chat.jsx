@@ -17,6 +17,20 @@ function Chat() {
 
   const messageIds = useRef(new Set());
 
+  // Function to handle clicks outside the emoji picker
+  const handleOutsideClick = (e) => {
+    if (showPicker && !e.target.closest(".emoji-picker-container")) {
+      setShowPicker(null);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("click", handleOutsideClick);
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [showPicker]);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -142,7 +156,7 @@ function Chat() {
           {selectedUser ? (
             messages.length > 0 ? (
               messages.map((msg, index) => (
-                <div key={index} className={`relative mb-2 flex ${msg.sender === userId ? "justify-end" : "justify-start"}`}>
+                <div key={index} className={`relative mb-8 flex ${msg.sender === userId ? "justify-end" : "justify-start"}`}>
                   {/* Message Content */}
                   <div
                     className={`relative p-2 max-w-xs rounded-lg ${
@@ -162,7 +176,7 @@ function Chat() {
 
                     {/* Reaction Button (+) */}
                     <button
-                      className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-xl"
+                      className="absolute bottom-1 right-1 text-gray-500 hover:text-gray-700 text-lg"
                       style={{ color: '#ff6f61' }}
                       onClick={() => togglePicker(msg._id)}
                     >
@@ -173,7 +187,9 @@ function Chat() {
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
                     <div
-                      className={`absolute z-10 ${index > messages.length / 2 ? 'bottom-full' : 'top-full'} right-0`}
+                      className={`emoji-picker-container absolute z-10 ${
+                        index > messages.length / 2 ? 'bottom-full' : 'top-full'
+                      } right-0`}
                       style={{
                         transform: 'translateY(10px)',
                         backgroundColor: 'white',
