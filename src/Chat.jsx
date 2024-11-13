@@ -11,27 +11,37 @@ function Chat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(null);
-  const [reactions, setReactions] = useState({});
+  const [showReactions, setShowReactions] = useState(null); // Track which reaction detail is shown
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
   const messageIds = useRef(new Set());
 
-  // Emit reaction event to server
-  // Send reaction to server via API and emit to other users
+  // Handle sending reaction to server
   const handleReaction = async (emoji, messageId) => {
     try {
-      // API call to save reaction in the database
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/react`, {
         messageId,
         emoji,
         userId,
       });
-
-      // Emit reaction for real-time updates
       socket.emit("addReaction", { messageId, emoji, userId });
     } catch (error) {
       console.error("Failed to react to message", error);
+    }
+  };
+
+  // Handle removing a reaction if it was added by the current user
+  const removeReaction = async (emoji, messageId) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/removeReaction`, {
+        messageId,
+        emoji,
+        userId,
+      });
+      socket.emit("removeReaction", { messageId, emoji, userId });
+    } catch (error) {
+      console.error("Failed to remove reaction", error);
     }
   };
 
@@ -48,7 +58,7 @@ function Chat() {
     fetchUsers();
     socket.emit("joinRoom", userId);
 
-    // Listen for incoming messages
+    // Listen for incoming messages and updated reactions
     socket.on("newMessage", (message) => {
       if (!messageIds.current.has(message._id)) {
         messageIds.current.add(message._id);
@@ -56,7 +66,6 @@ function Chat() {
       }
     });
 
-    // Listen for updated reactions from server
     socket.on("updateReactions", ({ messageId, emojisReacted }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
@@ -113,8 +122,12 @@ function Chat() {
   };
 
   const onEmojiClick = (emojiData, messageId) => {
-    handleReaction(emojiData.emoji, messageId); // Use the updated function to save and emit
+    handleReaction(emojiData.emoji, messageId);
     setShowPicker(null);
+  };
+
+  const toggleReactionsDisplay = (messageId) => {
+    setShowReactions((prev) => (prev === messageId ? null : messageId));
   };
 
   const handleLogout = () => {
@@ -184,7 +197,7 @@ function Chat() {
                     <button
                       className="text-gray-500 hover:text-gray-700 ml-1 text-sm"
                       onClick={(e) => {
-                        e.stopPropagation(); // Stop event from triggering outside click
+                        e.stopPropagation();
                         togglePicker(msg._id);
                       }}
                     >
@@ -193,7 +206,11 @@ function Chat() {
 
                     {/* Display Reactions */}
                     {msg.emojisReacted && msg.emojisReacted.map((reaction, idx) => (
-                      <span key={idx} className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl">
+                      <span
+                        key={idx}
+                        className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
+                        onClick={() => toggleReactionsDisplay(msg._id)}
+                      >
                         {reaction.emoji}
                       </span>
                     ))}
@@ -217,6 +234,27 @@ function Chat() {
                         disableAutoFocus
                         native
                       />
+                    </div>
+                  )}
+
+                  {/* Reaction Details with Option to Remove */}
+                  {showReactions === msg._id && (
+                    <div className="absolute top-full right-0 mt-2 bg-white border border-gray-300 shadow-md p-2 rounded w-40 z-10">
+                      <ul className="space-y-1">
+                        {msg.emojisReacted.map((reaction, idx) => (
+                          <li key={idx} className="flex justify-between items-center">
+                            <span>{reaction.reactedBy === userId ? "You" : reaction.reactedBy.username}</span>
+                            {reaction.reactedBy === userId && (
+                              <button
+                                className="text-red-500 text-xs"
+                                onClick={() => removeReaction(reaction.emoji, msg._id)}
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
