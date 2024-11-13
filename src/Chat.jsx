@@ -156,8 +156,8 @@ function Chat() {
               key={index}
               onClick={() => handleUserSelect(user)}
               className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
-                  ? "bg-blue-300 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
+                ? "bg-blue-300 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
                 }`}
             >
               {user.username}
@@ -187,8 +187,8 @@ function Chat() {
                   {/* Message Content */}
                   <div
                     className={`relative p-2 max-w-xs rounded-lg ${msg.sender === userId
-                        ? "bg-blue-500 text-white rounded-br-none"
-                        : "bg-gray-300 text-gray-800 rounded-bl-none"
+                      ? "bg-blue-500 text-white rounded-br-none"
+                      : "bg-gray-300 text-gray-800 rounded-bl-none"
                       }`}
                   >
                     {msg.content}
@@ -243,7 +243,7 @@ function Chat() {
                       <ul className="space-y-1">
                         {msg.emojisReacted.map((reaction, idx) => (
                           <li key={idx} className="flex justify-between items-center">
-                            <span>{reaction.emoji} - {reaction.reactedBy === userId ? "You" : reaction.reactedBy.username}</span>
+                            <span>{reaction.emoji} - {reaction.reactedBy || "Unknown User"}</span>
                             {reaction.reactedBy === userId && (
                               <button
                                 className="text-red-500 text-xs"
