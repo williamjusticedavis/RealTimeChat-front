@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
-import socket from "./socket";
+import socket from "./socket"; 
 import axios from "axios";
 
 function Chat() {
@@ -17,19 +17,10 @@ function Chat() {
 
   const messageIds = useRef(new Set());
 
-  // Function to handle clicks outside the emoji picker
-  const handleOutsideClick = (e) => {
-    if (showPicker && !e.target.closest(".emoji-picker-container")) {
-      setShowPicker(null);
-    }
+  // Emit reaction event to server
+  const handleReaction = (emoji, messageId) => {
+    socket.emit("addReaction", { messageId, emoji, userId });
   };
-
-  useEffect(() => {
-    document.addEventListener("click", handleOutsideClick);
-    return () => {
-      document.removeEventListener("click", handleOutsideClick);
-    };
-  }, [showPicker]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -44,6 +35,7 @@ function Chat() {
     fetchUsers();
     socket.emit("joinRoom", userId);
 
+    // Listen for incoming messages
     socket.on("newMessage", (message) => {
       if (!messageIds.current.has(message._id)) {
         messageIds.current.add(message._id);
@@ -51,8 +43,18 @@ function Chat() {
       }
     });
 
+    // Listen for updated reactions from server
+    socket.on("updateReactions", ({ messageId, emojisReacted }) => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === messageId ? { ...msg, emojisReacted } : msg
+        )
+      );
+    });
+
     return () => {
       socket.off("newMessage");
+      socket.off("updateReactions");
     };
   }, [userId, selectedUser]);
 
@@ -98,7 +100,7 @@ function Chat() {
   };
 
   const onEmojiClick = (emojiData, messageId) => {
-    setReactions((prev) => ({ ...prev, [messageId]: emojiData.emoji }));
+    handleReaction(emojiData.emoji, messageId); // Send reaction to server
     setShowPicker(null);
   };
 
@@ -167,7 +169,7 @@ function Chat() {
                   >
                     {msg.content}
                     
-                    {/* Reaction Button (+) at the end of the message */}
+                    {/* Reaction Button (+) */}
                     <button
                       className="text-gray-500 hover:text-gray-700 ml-1 text-sm"
                       onClick={(e) => {
@@ -178,12 +180,12 @@ function Chat() {
                       +
                     </button>
 
-                    {/* Display Reaction */}
-                    {reactions[msg._id] && (
-                      <span className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl">
-                        {reactions[msg._id]}
+                    {/* Display Reactions */}
+                    {msg.emojisReacted && msg.emojisReacted.map((reaction, idx) => (
+                      <span key={idx} className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl">
+                        {reaction.emoji}
                       </span>
-                    )}
+                    ))}
                   </div>
 
                   {/* Reaction Picker */}
@@ -226,7 +228,7 @@ function Chat() {
               className="flex-grow p-2 border rounded"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress} // Enter key sends message
+              onKeyPress={handleKeyPress}
             />
             <button
               className={`ml-2 px-4 py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
