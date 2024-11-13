@@ -17,7 +17,6 @@ function Chat() {
 
   const messageIds = useRef(new Set());
 
-  // Emit reaction event to server
   const handleReaction = async (emoji, messageId) => {
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/react`, {
@@ -31,7 +30,6 @@ function Chat() {
     }
   };
 
-  // Remove reaction event from server
   const removeReaction = async (emoji, messageId) => {
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/removeReaction`, {
@@ -40,6 +38,26 @@ function Chat() {
         userId,
       });
       socket.emit("removeReaction", { messageId, emoji, userId });
+
+      // Update UI live
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === messageId
+            ? {
+                ...msg,
+                emojisReacted: msg.emojisReacted.filter(
+                  (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
+                ),
+              }
+            : msg
+        )
+      );
+
+      // Close popup if there are no reactions left
+      const updatedMessage = messages.find((msg) => msg._id === messageId);
+      if (updatedMessage?.emojisReacted.length === 1) {
+        setShowReactions(null);
+      }
     } catch (error) {
       console.error("Failed to remove reaction", error);
     }
@@ -58,7 +76,7 @@ function Chat() {
     fetchUsers();
     socket.emit("joinRoom", userId);
 
-    // Listen for incoming messages and updated reactions
+    // Listen for new messages and updated reactions
     socket.on("newMessage", (message) => {
       if (!messageIds.current.has(message._id)) {
         messageIds.current.add(message._id);
@@ -243,7 +261,7 @@ function Chat() {
                       <ul className="space-y-1">
                         {msg.emojisReacted.map((reaction, idx) => (
                           <li key={idx} className="flex justify-between items-center">
-                            <span>{reaction.emoji} - {reaction.reactedBy || "Unknown User"}</span>
+                            <span>{reaction.emoji} - {reaction.reactedBy === userId ? "You" : selectedUser.username}</span>
                             {reaction.reactedBy === userId && (
                               <button
                                 className="text-red-500 text-xs"
