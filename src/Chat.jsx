@@ -11,13 +11,13 @@ function Chat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(null);
-  const [showReactions, setShowReactions] = useState(null); // Track which reaction detail is shown
+  const [showReactions, setShowReactions] = useState(null);
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
   const messageIds = useRef(new Set());
 
-  // Handle sending reaction to server
+  // Emit reaction event to server
   const handleReaction = async (emoji, messageId) => {
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/react`, {
@@ -31,7 +31,7 @@ function Chat() {
     }
   };
 
-  // Handle removing a reaction if it was added by the current user
+  // Remove reaction event from server
   const removeReaction = async (emoji, messageId) => {
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/removeReaction`, {
@@ -243,7 +243,7 @@ function Chat() {
                       <ul className="space-y-1">
                         {msg.emojisReacted.map((reaction, idx) => (
                           <li key={idx} className="flex justify-between items-center">
-                            <span>{reaction.reactedBy === userId ? "You" : reaction.reactedBy.username}</span>
+                            <span>{reaction.emoji} - {reaction.reactedBy === userId ? "You" : reaction.reactedBy.username}</span>
                             {reaction.reactedBy === userId && (
                               <button
                                 className="text-red-500 text-xs"
