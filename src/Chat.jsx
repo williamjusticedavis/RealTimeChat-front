@@ -12,12 +12,12 @@ function Chat() {
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(null);
   const [showReactions, setShowReactions] = useState(null);
-  const [reactionPosition, setReactionPosition] = useState({ top: 0, left: 0 });
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
   const messageIds = useRef(new Set());
 
+  // Emit reaction event to server
   const handleReaction = async (emoji, messageId) => {
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/react`, {
@@ -31,6 +31,7 @@ function Chat() {
     }
   };
 
+  // Remove reaction and update both users
   const removeReaction = async (emoji, messageId) => {
     try {
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/removeReaction`, {
@@ -53,8 +54,8 @@ function Chat() {
         )
       );
 
-      const updatedMessage = messages.find((msg) => msg._id === messageId);
-      if (updatedMessage?.emojisReacted.length === 1) {
+      // Update the UI in real-time
+      if (showReactions === messageId && messages.find((msg) => msg._id === messageId)?.emojisReacted.length === 1) {
         setShowReactions(null);
       }
     } catch (error) {
@@ -82,6 +83,7 @@ function Chat() {
       }
     });
 
+    // Sync reactions in real-time
     socket.on("updateReactions", ({ messageId, emojisReacted }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
@@ -142,10 +144,8 @@ function Chat() {
     setShowPicker(null);
   };
 
-  const toggleReactionsDisplay = (messageId, event) => {
+  const toggleReactionsDisplay = (messageId) => {
     setShowReactions((prev) => (prev === messageId ? null : messageId));
-    const { top, left } = event.target.getBoundingClientRect();
-    setReactionPosition({ top: top + window.scrollY, left: left + window.scrollX });
   };
 
   const handleLogout = () => {
@@ -227,7 +227,7 @@ function Chat() {
                       <span
                         key={idx}
                         className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
-                        onClick={(e) => toggleReactionsDisplay(msg._id, e)}
+                        onClick={() => toggleReactionsDisplay(msg._id)}
                       >
                         {reaction.emoji}
                       </span>
@@ -259,7 +259,7 @@ function Chat() {
                   {showReactions === msg._id && (
                     <div
                       className="absolute z-10 bg-white border border-gray-300 shadow-md p-2 rounded w-40"
-                      style={{ top: reactionPosition.top, left: reactionPosition.left }}
+                      style={{ top: "100%", right: 0 }}
                     >
                       <ul className="space-y-1">
                         {msg.emojisReacted.map((reaction, idx) => (
