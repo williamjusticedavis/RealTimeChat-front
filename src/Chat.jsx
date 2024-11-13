@@ -12,6 +12,7 @@ function Chat() {
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(null);
   const [showReactions, setShowReactions] = useState(null);
+  const [reactionPosition, setReactionPosition] = useState({ top: 0, left: 0 });
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -39,7 +40,6 @@ function Chat() {
       });
       socket.emit("removeReaction", { messageId, emoji, userId });
 
-      // Update UI live
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === messageId
@@ -53,7 +53,6 @@ function Chat() {
         )
       );
 
-      // Close popup if there are no reactions left
       const updatedMessage = messages.find((msg) => msg._id === messageId);
       if (updatedMessage?.emojisReacted.length === 1) {
         setShowReactions(null);
@@ -76,7 +75,6 @@ function Chat() {
     fetchUsers();
     socket.emit("joinRoom", userId);
 
-    // Listen for new messages and updated reactions
     socket.on("newMessage", (message) => {
       if (!messageIds.current.has(message._id)) {
         messageIds.current.add(message._id);
@@ -144,8 +142,10 @@ function Chat() {
     setShowPicker(null);
   };
 
-  const toggleReactionsDisplay = (messageId) => {
+  const toggleReactionsDisplay = (messageId, event) => {
     setShowReactions((prev) => (prev === messageId ? null : messageId));
+    const { top, left } = event.target.getBoundingClientRect();
+    setReactionPosition({ top: top + window.scrollY, left: left + window.scrollX });
   };
 
   const handleLogout = () => {
@@ -227,7 +227,7 @@ function Chat() {
                       <span
                         key={idx}
                         className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
-                        onClick={() => toggleReactionsDisplay(msg._id)}
+                        onClick={(e) => toggleReactionsDisplay(msg._id, e)}
                       >
                         {reaction.emoji}
                       </span>
@@ -257,7 +257,10 @@ function Chat() {
 
                   {/* Reaction Details with Option to Remove */}
                   {showReactions === msg._id && (
-                    <div className="absolute top-full right-0 mt-2 bg-white border border-gray-300 shadow-md p-2 rounded w-40 z-10">
+                    <div
+                      className="absolute z-10 bg-white border border-gray-300 shadow-md p-2 rounded w-40"
+                      style={{ top: reactionPosition.top, left: reactionPosition.left }}
+                    >
                       <ul className="space-y-1">
                         {msg.emojisReacted.map((reaction, idx) => (
                           <li key={idx} className="flex justify-between items-center">
