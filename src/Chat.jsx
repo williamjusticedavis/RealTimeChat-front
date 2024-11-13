@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
-import socket from "./socket"; 
+import socket from "./socket";
 import axios from "axios";
 
 function Chat() {
@@ -18,8 +18,21 @@ function Chat() {
   const messageIds = useRef(new Set());
 
   // Emit reaction event to server
-  const handleReaction = (emoji, messageId) => {
-    socket.emit("addReaction", { messageId, emoji, userId });
+  // Send reaction to server via API and emit to other users
+  const handleReaction = async (emoji, messageId) => {
+    try {
+      // API call to save reaction in the database
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/react`, {
+        messageId,
+        emoji,
+        userId,
+      });
+
+      // Emit reaction for real-time updates
+      socket.emit("addReaction", { messageId, emoji, userId });
+    } catch (error) {
+      console.error("Failed to react to message", error);
+    }
   };
 
   useEffect(() => {
@@ -100,7 +113,7 @@ function Chat() {
   };
 
   const onEmojiClick = (emojiData, messageId) => {
-    handleReaction(emojiData.emoji, messageId); // Send reaction to server
+    handleReaction(emojiData.emoji, messageId); // Use the updated function to save and emit
     setShowPicker(null);
   };
 
@@ -129,11 +142,10 @@ function Chat() {
             <li
               key={index}
               onClick={() => handleUserSelect(user)}
-              className={`p-2 cursor-pointer rounded ${
-                selectedUser && selectedUser._id === user._id
+              className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
                   ? "bg-blue-300 text-white"
                   : "bg-gray-200 hover:bg-gray-300"
-              }`}
+                }`}
             >
               {user.username}
             </li>
@@ -161,14 +173,13 @@ function Chat() {
                 <div key={index} className={`relative mb-4 flex ${msg.sender === userId ? "justify-end" : "justify-start"}`}>
                   {/* Message Content */}
                   <div
-                    className={`relative p-2 max-w-xs rounded-lg ${
-                      msg.sender === userId
+                    className={`relative p-2 max-w-xs rounded-lg ${msg.sender === userId
                         ? "bg-blue-500 text-white rounded-br-none"
                         : "bg-gray-300 text-gray-800 rounded-bl-none"
-                    }`}
+                      }`}
                   >
                     {msg.content}
-                    
+
                     {/* Reaction Button (+) */}
                     <button
                       className="text-gray-500 hover:text-gray-700 ml-1 text-sm"
@@ -191,9 +202,8 @@ function Chat() {
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
                     <div
-                      className={`emoji-picker-container absolute z-10 ${
-                        index > messages.length / 2 ? 'bottom-full' : 'top-full'
-                      }`}
+                      className={`emoji-picker-container absolute z-10 ${index > messages.length / 2 ? 'bottom-full' : 'top-full'
+                        }`}
                       style={{
                         transform: 'translateY(10px)',
                         backgroundColor: 'white',
