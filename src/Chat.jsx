@@ -73,18 +73,18 @@ function Chat() {
         console.error("Failed to fetch users", error);
       }
     };
-
+  
     fetchUsers();
     socket.emit("joinRoom", userId);
-
+  
     socket.on("newMessage", (message) => {
       if (!messageIds.current.has(message._id)) {
         messageIds.current.add(message._id);
         setMessages((prevMessages) => [...prevMessages, message]);
       }
     });
-
-    // Sync reactions in real-time
+  
+    // Listen for updated reactions from server in real-time
     socket.on("updateReactions", ({ messageId, emojisReacted }) => {
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
@@ -92,12 +92,13 @@ function Chat() {
         )
       );
     });
-
+  
     return () => {
       socket.off("newMessage");
       socket.off("updateReactions");
     };
   }, [userId, selectedUser]);
+  
 
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
@@ -147,8 +148,10 @@ function Chat() {
 
   const toggleReactionsDisplay = (messageId, event) => {
     setShowReactions((prev) => (prev === messageId ? null : messageId));
-    const { top, left, height } = event.target.getBoundingClientRect();
-    setReactionPosition({ top: top + height + window.scrollY, left: left + window.scrollX });
+    if (event) {
+      const { top, left, height } = event.target.getBoundingClientRect();
+      setReactionPosition({ top: top + height + window.scrollY, left: left + window.scrollX });
+    }
   };
 
 
@@ -231,11 +234,12 @@ function Chat() {
                       <span
                         key={idx}
                         className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
-                        onClick={() => toggleReactionsDisplay(msg._id)}
+                        onClick={(e) => toggleReactionsDisplay(msg._id, e)}
                       >
                         {reaction.emoji}
                       </span>
                     ))}
+
                   </div>
 
                   {/* Reaction Picker */}
