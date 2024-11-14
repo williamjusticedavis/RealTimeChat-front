@@ -41,20 +41,20 @@ function Chat() {
       });
       socket.emit("removeReaction", { messageId, emoji, userId });
 
+      // Update the UI in real-time
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === messageId
             ? {
-                ...msg,
-                emojisReacted: msg.emojisReacted.filter(
-                  (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
-                ),
-              }
+              ...msg,
+              emojisReacted: msg.emojisReacted.filter(
+                (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
+              ),
+            }
             : msg
         )
       );
 
-      // Update the UI in real-time
       if (showReactions === messageId && messages.find((msg) => msg._id === messageId)?.emojisReacted.length === 1) {
         setShowReactions(null);
       }
@@ -62,6 +62,7 @@ function Chat() {
       console.error("Failed to remove reaction", error);
     }
   };
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -144,9 +145,12 @@ function Chat() {
     setShowPicker(null);
   };
 
-  const toggleReactionsDisplay = (messageId) => {
+  const toggleReactionsDisplay = (messageId, event) => {
     setShowReactions((prev) => (prev === messageId ? null : messageId));
+    const { top, left, height } = event.target.getBoundingClientRect();
+    setReactionPosition({ top: top + height + window.scrollY, left: left + window.scrollX });
   };
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
