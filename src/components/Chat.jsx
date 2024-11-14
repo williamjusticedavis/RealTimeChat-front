@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
+import { BsEmojiSmile } from "react-icons/bs"; // Importing emoji icon from react-icons
 import socket from "../socket";
 import axios from "axios";
 
@@ -173,6 +174,11 @@ function Chat() {
     }
   };
 
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -233,17 +239,11 @@ function Chat() {
                     }`}
                   >
                     {msg.content}
-
-                    {/* Reaction Button (+) */}
-                    <button
-                      className="text-gray-500 hover:text-gray-700 ml-1 text-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        togglePicker(msg._id);
-                      }}
-                    >
-                      +
-                    </button>
+                    
+                    {/* Display the sent time */}
+                    <span className="block text-xs mt-1 text-gray-600">
+                      {formatTime(msg.timestamp)}
+                    </span>
 
                     {/* Display Reactions */}
                     {msg.emojisReacted &&
@@ -263,6 +263,16 @@ function Chat() {
                         </span>
                       ))}
                   </div>
+
+                  {/* Emoji Button */}
+                  <button
+                    className={`p-1 text-xl ${
+                      msg.sender === userId ? "ml-2" : "mr-2"
+                    } text-gray-500 hover:text-gray-700`}
+                    onClick={() => togglePicker(msg._id)}
+                  >
+                    <BsEmojiSmile />
+                  </button>
 
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
