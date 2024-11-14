@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
-import { BsEmojiSmile } from "react-icons/bs"; // Importing emoji icon from react-icons
+import { BsEmojiSmile } from "react-icons/bs";
 import socket from "../socket";
 import axios from "axios";
 
@@ -18,25 +18,26 @@ function Chat() {
   const navigate = useNavigate();
 
   const messageIds = useRef(new Set());
-  const pickerRef = useRef();
-  const reactionsRef = useRef();
+  const pickerRef = useRef(null);
+  const reactionsRef = useRef(null);
 
   // Close popups if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target) &&
-        reactionsRef.current &&
-        !reactionsRef.current.contains(event.target)
+        showPicker && pickerRef.current && !pickerRef.current.contains(event.target)
       ) {
         setShowPicker(null);
+      }
+      if (
+        showReactions && reactionsRef.current && !reactionsRef.current.contains(event.target)
+      ) {
         setShowReactions(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [showPicker, showReactions]);
 
   // Emit reaction event to server
   const handleReaction = async (emoji, messageId) => {
