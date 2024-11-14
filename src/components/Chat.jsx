@@ -42,7 +42,6 @@ function Chat() {
       });
       socket.emit("removeReaction", { messageId, emoji, userId });
 
-      // Check if this was the last reaction and close the popup if so
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === messageId
@@ -251,12 +250,12 @@ function Chat() {
                       msg.emojisReacted.map((reaction, idx) => (
                         <span
                           key={idx}
-                          className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
+                          className={`absolute ${msg.sender === userId ? "top-0 left-0" : "top-0 right-0"} transform ${msg.sender === userId ? "-translate-x-1/2" : "translate-x-1/2"} -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer`}
                           onClick={(e) =>
                             toggleReactionsDisplay(
                               msg._id,
                               e,
-                              msg.sender === userId // Align to the left if the message is on the right
+                              msg.sender === userId // Align popup to the left if the message is sent by the user
                             )
                           }
                         >
