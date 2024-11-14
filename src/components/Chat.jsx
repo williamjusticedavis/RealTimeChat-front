@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
-import socket from "./socket";
+import socket from "../socket";
 import axios from "axios";
 
 function Chat() {
