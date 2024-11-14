@@ -46,11 +46,11 @@ function Chat() {
         prevMessages.map((msg) =>
           msg._id === messageId
             ? {
-                ...msg,
-                emojisReacted: msg.emojisReacted.filter(
-                  (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
-                ),
-              }
+              ...msg,
+              emojisReacted: msg.emojisReacted.filter(
+                (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
+              ),
+            }
             : msg
         )
       );
@@ -72,17 +72,17 @@ function Chat() {
         console.error("Failed to fetch users", error);
       }
     };
-  
+
     fetchUsers();
     socket.emit("joinRoom", userId);
-  
+
     socket.on("newMessage", (message) => {
       if (!messageIds.current.has(message._id)) {
         messageIds.current.add(message._id);
         setMessages((prevMessages) => [...prevMessages, message]);
       }
     });
-  
+
     // Listen for updated reactions from server in real-time
     socket.on("updateReactions", ({ messageId, emojisReacted }) => {
       setMessages((prevMessages) =>
@@ -91,13 +91,13 @@ function Chat() {
         )
       );
     });
-  
+
     return () => {
       socket.off("newMessage");
       socket.off("updateReactions");
     };
   }, [userId, selectedUser]);
-  
+
 
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
@@ -148,8 +148,12 @@ function Chat() {
   const toggleReactionsDisplay = (messageId, event) => {
     setShowReactions((prev) => (prev === messageId ? null : messageId));
     if (event) {
+      // Get the exact position of the clicked emoji
       const { top, left, height } = event.target.getBoundingClientRect();
-      setReactionPosition({ top: top + height + window.scrollY, left: left + window.scrollX });
+      setReactionPosition({
+        top: top + height + window.scrollY,  // Adjust for scroll position
+        left: left + window.scrollX,         // Adjust for scroll position
+      });
     }
   };
 
@@ -285,6 +289,7 @@ function Chat() {
                       </ul>
                     </div>
                   )}
+
                 </div>
               ))
             ) : (
