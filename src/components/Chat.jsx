@@ -41,6 +41,25 @@ function Chat() {
         userId,
       });
       socket.emit("removeReaction", { messageId, emoji, userId });
+
+      // Check if this was the last reaction and close the popup if so
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === messageId
+            ? {
+                ...msg,
+                emojisReacted: msg.emojisReacted.filter(
+                  (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
+                ),
+              }
+            : msg
+        )
+      );
+
+      const remainingReactions = messages.find((msg) => msg._id === messageId)?.emojisReacted.length - 1;
+      if (remainingReactions <= 0) {
+        setShowReactions(null);
+      }
     } catch (error) {
       console.error("Failed to remove reaction", error);
     }
@@ -130,15 +149,14 @@ function Chat() {
     setShowPicker(null);
   };
 
-  const toggleReactionsDisplay = (messageId, event) => {
+  const toggleReactionsDisplay = (messageId, event, alignRight) => {
     setShowReactions((prev) => (prev === messageId ? null : messageId));
 
     if (event) {
-      // Get the exact position of the clicked emoji
-      const { top, left, height } = event.target.getBoundingClientRect();
+      const { top, left, width, height } = event.target.getBoundingClientRect();
       setReactionPosition({
-        top: top + height + window.scrollY, // Adjust for scroll position
-        left: left + window.scrollX, // Adjust for scroll position
+        top: top + height + window.scrollY,
+        left: alignRight ? left - 150 + window.scrollX : left + width + window.scrollX,
       });
     }
   };
@@ -234,7 +252,13 @@ function Chat() {
                         <span
                           key={idx}
                           className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
-                          onClick={(e) => toggleReactionsDisplay(msg._id, e)}
+                          onClick={(e) =>
+                            toggleReactionsDisplay(
+                              msg._id,
+                              e,
+                              msg.sender === userId // Align to the left if the message is on the right
+                            )
+                          }
                         >
                           {reaction.emoji}
                         </span>
