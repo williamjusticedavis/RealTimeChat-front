@@ -253,7 +253,7 @@ function Chat() {
                   {/* Emoji Button */}
                   <button
                     className={`p-1 text-xl ${
-                      msg.sender === userId ? "mr-2" : "ml-2"
+                      msg.sender === userId ? "mr-2 order-first" : "ml-2 order-last"
                     } text-gray-500 hover:text-gray-700`}
                     onClick={() => togglePicker(msg._id)}
                   >
