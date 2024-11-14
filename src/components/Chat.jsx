@@ -18,6 +18,25 @@ function Chat() {
   const navigate = useNavigate();
 
   const messageIds = useRef(new Set());
+  const pickerRef = useRef();
+  const reactionsRef = useRef();
+
+  // Close popups if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target) &&
+        reactionsRef.current &&
+        !reactionsRef.current.contains(event.target)
+      ) {
+        setShowPicker(null);
+        setShowReactions(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Emit reaction event to server
   const handleReaction = async (emoji, messageId) => {
@@ -234,7 +253,7 @@ function Chat() {
                   <div
                     className={`relative p-2 max-w-xs rounded-lg ${
                       msg.sender === userId
-                        ? "bg-blue-500 text-white rounded-br-none"
+                        ? "bg-blue-400 text-white rounded-br-none"
                         : "bg-gray-300 text-gray-800 rounded-bl-none"
                     }`}
                   >
@@ -277,6 +296,7 @@ function Chat() {
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
                     <div
+                      ref={pickerRef}
                       className={`emoji-picker-container absolute z-10 ${
                         index > messages.length / 2 ? "bottom-full" : "top-full"
                       }`}
@@ -299,6 +319,7 @@ function Chat() {
                   {/* Reaction Details with Option to Remove */}
                   {showReactions === msg._id && (
                     <div
+                      ref={reactionsRef}
                       className="fixed z-10 bg-white border border-gray-300 shadow-md p-2 rounded w-40"
                       style={{
                         top: reactionPosition.top,
