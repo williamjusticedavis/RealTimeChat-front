@@ -12,6 +12,7 @@ function Chat() {
   const [loading, setLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(null);
   const [showReactions, setShowReactions] = useState(null);
+  const [reactionPosition, setReactionPosition] = useState({ top: 0, left: 0 });
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -41,16 +42,15 @@ function Chat() {
       });
       socket.emit("removeReaction", { messageId, emoji, userId });
 
-      // Update the UI in real-time
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg._id === messageId
             ? {
-              ...msg,
-              emojisReacted: msg.emojisReacted.filter(
-                (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
-              ),
-            }
+                ...msg,
+                emojisReacted: msg.emojisReacted.filter(
+                  (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
+                ),
+              }
             : msg
         )
       );
@@ -62,7 +62,6 @@ function Chat() {
       console.error("Failed to remove reaction", error);
     }
   };
-
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -267,7 +266,7 @@ function Chat() {
                   {showReactions === msg._id && (
                     <div
                       className="absolute z-10 bg-white border border-gray-300 shadow-md p-2 rounded w-40"
-                      style={{ top: "100%", right: 0 }}
+                      style={{ top: reactionPosition.top, left: reactionPosition.left }}
                     >
                       <ul className="space-y-1">
                         {msg.emojisReacted.map((reaction, idx) => (
