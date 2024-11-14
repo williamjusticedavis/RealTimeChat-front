@@ -41,23 +41,6 @@ function Chat() {
         userId,
       });
       socket.emit("removeReaction", { messageId, emoji, userId });
-
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg._id === messageId
-            ? {
-              ...msg,
-              emojisReacted: msg.emojisReacted.filter(
-                (reaction) => !(reaction.emoji === emoji && reaction.reactedBy === userId)
-              ),
-            }
-            : msg
-        )
-      );
-
-      if (showReactions === messageId && messages.find((msg) => msg._id === messageId)?.emojisReacted.length === 1) {
-        setShowReactions(null);
-      }
     } catch (error) {
       console.error("Failed to remove reaction", error);
     }
@@ -98,7 +81,6 @@ function Chat() {
     };
   }, [userId, selectedUser]);
 
-
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
     try {
@@ -124,7 +106,10 @@ function Chat() {
       setLoading(true);
 
       try {
-        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/chat/send`, newMessage);
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/chat/send`,
+          newMessage
+        );
         messageIds.current.add(response.data._id);
         setMessages((prevMessages) => [...prevMessages, response.data]);
         setInput("");
@@ -147,16 +132,16 @@ function Chat() {
 
   const toggleReactionsDisplay = (messageId, event) => {
     setShowReactions((prev) => (prev === messageId ? null : messageId));
+
     if (event) {
       // Get the exact position of the clicked emoji
       const { top, left, height } = event.target.getBoundingClientRect();
       setReactionPosition({
-        top: top + height + window.scrollY,  // Adjust for scroll position
-        left: left + window.scrollX,         // Adjust for scroll position
+        top: top + height + window.scrollY, // Adjust for scroll position
+        left: left + window.scrollX, // Adjust for scroll position
       });
     }
   };
-
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -183,10 +168,11 @@ function Chat() {
             <li
               key={index}
               onClick={() => handleUserSelect(user)}
-              className={`p-2 cursor-pointer rounded ${selectedUser && selectedUser._id === user._id
-                ? "bg-blue-300 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-                }`}
+              className={`p-2 cursor-pointer rounded ${
+                selectedUser && selectedUser._id === user._id
+                  ? "bg-blue-300 text-white"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
             >
               {user.username}
             </li>
@@ -197,7 +183,11 @@ function Chat() {
       {/* Chat Area */}
       <div className="w-3/4 flex flex-col">
         <header className="p-4 bg-blue-500 text-white flex justify-between items-center">
-          <span>{selectedUser ? `Chat with ${selectedUser.username}` : "Select a user to start chatting"}</span>
+          <span>
+            {selectedUser
+              ? `Chat with ${selectedUser.username}`
+              : "Select a user to start chatting"}
+          </span>
           <button
             onClick={handleLogout}
             className="bg-red-500 px-4 py-1 rounded text-white hover:bg-red-600"
@@ -211,13 +201,19 @@ function Chat() {
           {selectedUser ? (
             messages.length > 0 ? (
               messages.map((msg, index) => (
-                <div key={index} className={`relative mb-4 flex ${msg.sender === userId ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={index}
+                  className={`relative mb-4 flex ${
+                    msg.sender === userId ? "justify-end" : "justify-start"
+                  }`}
+                >
                   {/* Message Content */}
                   <div
-                    className={`relative p-2 max-w-xs rounded-lg ${msg.sender === userId
-                      ? "bg-blue-500 text-white rounded-br-none"
-                      : "bg-gray-300 text-gray-800 rounded-bl-none"
-                      }`}
+                    className={`relative p-2 max-w-xs rounded-lg ${
+                      msg.sender === userId
+                        ? "bg-blue-500 text-white rounded-br-none"
+                        : "bg-gray-300 text-gray-800 rounded-bl-none"
+                    }`}
                   >
                     {msg.content}
 
@@ -233,29 +229,30 @@ function Chat() {
                     </button>
 
                     {/* Display Reactions */}
-                    {msg.emojisReacted && msg.emojisReacted.map((reaction, idx) => (
-                      <span
-                        key={idx}
-                        className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
-                        onClick={(e) => toggleReactionsDisplay(msg._id, e)}
-                      >
-                        {reaction.emoji}
-                      </span>
-                    ))}
-
+                    {msg.emojisReacted &&
+                      msg.emojisReacted.map((reaction, idx) => (
+                        <span
+                          key={idx}
+                          className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 text-xl cursor-pointer"
+                          onClick={(e) => toggleReactionsDisplay(msg._id, e)}
+                        >
+                          {reaction.emoji}
+                        </span>
+                      ))}
                   </div>
 
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
                     <div
-                      className={`emoji-picker-container absolute z-10 ${index > messages.length / 2 ? 'bottom-full' : 'top-full'
-                        }`}
+                      className={`emoji-picker-container absolute z-10 ${
+                        index > messages.length / 2 ? "bottom-full" : "top-full"
+                      }`}
                       style={{
-                        transform: 'translateY(10px)',
-                        backgroundColor: 'white',
-                        boxShadow: '0px 4px 8px rgba(0,0,0,0.2)',
-                        padding: '0.5rem',
-                        borderRadius: '8px',
+                        transform: "translateY(10px)",
+                        backgroundColor: "white",
+                        boxShadow: "0px 4px 8px rgba(0,0,0,0.2)",
+                        padding: "0.5rem",
+                        borderRadius: "8px",
                       }}
                     >
                       <EmojiPicker
@@ -269,13 +266,19 @@ function Chat() {
                   {/* Reaction Details with Option to Remove */}
                   {showReactions === msg._id && (
                     <div
-                      className="absolute z-10 bg-white border border-gray-300 shadow-md p-2 rounded w-40"
-                      style={{ top: reactionPosition.top, left: reactionPosition.left }}
+                      className="fixed z-10 bg-white border border-gray-300 shadow-md p-2 rounded w-40"
+                      style={{
+                        top: reactionPosition.top,
+                        left: reactionPosition.left,
+                      }}
                     >
                       <ul className="space-y-1">
                         {msg.emojisReacted.map((reaction, idx) => (
                           <li key={idx} className="flex justify-between items-center">
-                            <span>{reaction.emoji} - {reaction.reactedBy === userId ? "You" : selectedUser.username}</span>
+                            <span>
+                              {reaction.emoji} -{" "}
+                              {reaction.reactedBy === userId ? "You" : selectedUser.username}
+                            </span>
                             {reaction.reactedBy === userId && (
                               <button
                                 className="text-red-500 text-xs"
@@ -289,14 +292,15 @@ function Chat() {
                       </ul>
                     </div>
                   )}
-
                 </div>
               ))
             ) : (
               <p className="text-gray-500">No messages yet.</p>
             )
           ) : (
-            <p className="text-gray-500 text-center mt-8">Select a user to start chatting</p>
+            <p className="text-gray-500 text-center mt-8">
+              Select a user to start chatting
+            </p>
           )}
         </div>
 
@@ -312,7 +316,9 @@ function Chat() {
               onKeyPress={handleKeyPress}
             />
             <button
-              className={`ml-2 px-4 py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"}`}
+              className={`ml-2 px-4 py-2 rounded text-white ${
+                loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+              }`}
               onClick={sendMessage}
               disabled={loading}
             >
