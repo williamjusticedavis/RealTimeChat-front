@@ -250,6 +250,16 @@ function Chat() {
                     msg.sender === userId ? "justify-end" : "justify-start"
                   }`}
                 >
+                  {/* Emoji Button */}
+                  <button
+                    className={`p-1 text-xl ${
+                      msg.sender === userId ? "mr-2" : "ml-2"
+                    } text-gray-500 hover:text-gray-700`}
+                    onClick={() => togglePicker(msg._id)}
+                  >
+                    <BsEmojiSmile />
+                  </button>
+
                   {/* Message Content */}
                   <div
                     className={`relative p-2 max-w-xs rounded-lg ${
@@ -283,16 +293,6 @@ function Chat() {
                         </span>
                       ))}
                   </div>
-
-                  {/* Emoji Button */}
-                  <button
-                    className={`p-1 text-xl ${
-                      msg.sender === userId ? "ml-2" : "mr-2"
-                    } text-gray-500 hover:text-gray-700`}
-                    onClick={() => togglePicker(msg._id)}
-                  >
-                    <BsEmojiSmile />
-                  </button>
 
                   {/* Reaction Picker */}
                   {showPicker === msg._id && (
